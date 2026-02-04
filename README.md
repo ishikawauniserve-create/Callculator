@@ -2,13 +2,14 @@
 
 ## 概要
 
-このプロジェクトは、　Javaの使い方を学ぶために作成しております。
+このプロジェクトはJavaの使い方を学ぶために作成しております。
+
 その制作工程をアップロードしていればと思っております。
 ## 使い方
 Eclipseで実行するとコンソールで計算できます。
-##CalculatorFrame.java
+## CalculatorFrame.java
 このクラスでは、コンソールのガワを作成しております。コンソールが表示され、ソフトキーによる入力によって計算をおこないます。
-##CalculatorController.java
+## CalculatorController.java
 ソフトキーでの入力の処理をおこないます。入力された数式を別のクラスに渡す橋渡し的な役割を想像しています。
-##ArithmeticOperation.java
+## ArithmeticOperation.java
 こちらで数式の処理をおこない、結果をコンソールの画面に返すことを想定しています。
