@@ -1,7 +1,9 @@
 package calculator.view;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 
 import javax.swing.JButton;
@@ -9,89 +11,203 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
+import javax.swing.border.EmptyBorder;
 
 import calculator.controller.CalculatorController;
 import calculator.model.ArithmeticOperation;
 
-public class CalculatorFrame extends JFrame{//クラスの宣言、パブリッククラスなので、どこからでも参照することができる。JFrame型を参照している　ウィンドウを作るクラス
-	
+public class CalculatorFrame extends JFrame {
 
-	//コンポネント作成
-	BorderLayout borderlayout1 =new BorderLayout();//レイアウト型、東西南北、中央の５つに分割できる。レイアウト型から変数を作っている。　newメモリ上にオブジェクト化する。
+	private JButton[] buttons;
 
-	GridLayout gridlayout = new GridLayout(6, 4);//コンテナ内の部品を格子状に均等に配置するクラス
-	
-	private JButton[] buttons; //このクラス内のみでしかアクセスできない。JButtonの配列型を参照できる変数buttonsを宣言、lengthはサイズが固定されている
+	private JTextField history = new JTextField("");
 
-	private JTextField result = new JTextField("0");//JTextField型を参照できる変数resultを宣言
+	private JTextField result = new JTextField("0");
 
-	public CalculatorFrame() { //コンストラクタ宣言、クラスオブジェクトを生成するときに自動で実行されるメソッド
+	public CalculatorFrame() {
 
-		//画面描画設定
-		this.setLayout(borderlayout1);//this = 生成中のオブジェクトを自身へ参照
+		//ウィンドウ
+		setTitle("電卓");
 
-		this.setSize(400, 600);// 
+		setSize(420, 640);
 
-		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);// ×を押したらウィンドウが閉じる
+		setLocationRelativeTo(null);
 
-		this.setTitle("電卓");//ウィンドウの名前
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-		this.add(result, BorderLayout.NORTH);//ペインの北に結果を配置
+		setLayout(new BorderLayout(8, 8));
 
-		result.setPreferredSize(new Dimension(0, 120));//計算結果画面サイズ
+		getContentPane().setBackground(new Color(30, 30, 30));
 
-		result.setText("0");//最初は０表示
+		result.setPreferredSize(new Dimension(0, 120));
 
-		result.setHorizontalAlignment(JTextField.RIGHT);  //右寄せ
+		result.setFont(new Font("Consolas", Font.BOLD, 36));
 
-		//ソフトキー描画設定
-		JPanel SoftKey = new JPanel();
+		result.setHorizontalAlignment(JTextField.RIGHT);
 
-		SoftKey.setLayout(gridlayout);//左から順に配置してくれるメソッド
+		result.setEditable(false);
 
-		this.add(SoftKey, BorderLayout.CENTER);
+		result.setBackground(new Color(20, 20, 20)); //画面背景色
 
-		buttons = new JButton[24];//配列によってキーを24個配置する 中身はnull
+		result.setForeground(new Color(80, 220, 120));
 
-		String[] displayLabels = { //表示用
-				"AC","C","%","÷",
-				"7","8","9","x",
-				"4","5","6","-",
-				"1","2","3","+",
-				"+/-","0",".","=",
-				"(",")","",""
-		};	
+		result.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-		//forでループ処理
-		for (int i = 0; i < buttons.length; i++){ //for文で24個つくる
+		// --- 表示パネルの作成 ---
+		JPanel displayPanel = new JPanel(new GridLayout(2, 1)); // 2行1列のレイアウト
 
-			JButton b = new JButton(displayLabels[i]);//表示文字としてボタンを作成
+		displayPanel.setBackground(new Color(20, 20, 20));
 
-			buttons[i] = b;     // 配列に保存
+		// 1. 履歴/式の表示（上段）
+		history.setPreferredSize(new Dimension(0, 40));
 
-			SoftKey.add(b);     //SoftKeyに加える		
+		history.setFont(new Font("Consolas", Font.PLAIN, 18)); // 少し小さめ
+
+		history.setHorizontalAlignment(JTextField.RIGHT);
+
+		history.setEditable(false);
+
+		history.setBackground(new Color(20, 20, 20));
+
+		history.setForeground(new Color(150, 150, 150)); // 控えめなグレー
+
+		history.setBorder(new EmptyBorder(10, 20, 0, 20)); // 下の余白を詰める
+
+		history.setText(""); // テスト表示用
+
+		// 2. 結果の表示（下段）
+		result.setPreferredSize(new Dimension(0, 80)); // 高さを少し調整
+
+		result.setFont(new Font("Consolas", Font.BOLD, 48));
+
+		result.setHorizontalAlignment(JTextField.RIGHT);
+
+		result.setEditable(false);
+
+		result.setBackground(new Color(20, 20, 20));
+
+		result.setForeground(new Color(80, 220, 120));
+
+		result.setBorder(new EmptyBorder(0, 20, 10, 20)); // 上の余白を詰める
+
+		// パネルにまとめて追加
+		displayPanel.add(history);
+
+		displayPanel.add(result);
+
+		// メインフレームの北側に配置
+		add(displayPanel, BorderLayout.NORTH);
+
+		//ソフトキー
+		JPanel softKey = new JPanel(new GridLayout(6, 4, 8, 8));
+
+		softKey.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+		softKey.setBackground(new Color(30, 30, 30));
+
+		add(softKey, BorderLayout.CENTER);
+
+		buttons = new JButton[24];
+
+		String[] labels = {
+				"AC", "C", "%", "÷",
+				"7", "8", "9", "x",
+				"4", "5", "6", "-",
+				"1", "2", "3", "+",
+				"+/-", "0", ".", "=",
+				"(", ")", "!", "√"
+		};
+
+		for (int i = 0; i < buttons.length; i++) {
+
+			JButton b = new JButton(labels[i]);
+
+			styleButton(b, labels[i]);
+
+			buttons[i] = b;
+
+			softKey.add(b);
 
 		}
 
-		this.setVisible(true);//ウィンドウを可視化
-
-		}
-
-		public JTextField getResultField() {//Controllerで参照
-
-	    return result;
-
-		}
-
-		public JButton[] getButtons() {//geterがないと参照できない
-
-	    return buttons;
-
-		}
-
-		public static void main(String[] args) {
-
-		    CalculatorFrame frame = new CalculatorFrame();
-		    new CalculatorController(frame, new ArithmeticOperation());
-		}
+		setVisible(true);
 	}
+
+	// ソフトキーのスタイル
+	private void styleButton(JButton b, String label) {
+
+		b.setFont(new Font("Segoe UI", Font.BOLD, 20));
+
+		b.setFocusPainted(false);
+
+		b.setBorderPainted(false);
+
+		b.setOpaque(true);
+
+		// 種類ごとに色分け
+		if (label.matches("[0-9.]+")) {
+
+			b.setBackground(new Color(60, 60, 60));
+
+			b.setForeground(Color.WHITE);
+		}
+
+		else if (label.equals("=")) {
+
+			b.setBackground(new Color(80, 160, 255));
+
+			b.setForeground(Color.WHITE);
+
+		} else if (label.equals("AC") || label.equals("C")) {
+
+			b.setBackground(new Color(200, 80, 80));
+
+			b.setForeground(Color.WHITE);
+
+		} else {
+
+			b.setBackground(new Color(100, 100, 100));
+
+			b.setForeground(Color.WHITE);
+
+		}
+
+		// ホバー効果
+		b.addMouseListener(new java.awt.event.MouseAdapter() {
+
+			public void mouseEntered(java.awt.event.MouseEvent evt) {
+
+				b.setBackground(b.getBackground().brighter());
+
+			}
+
+			public void mouseExited(java.awt.event.MouseEvent evt) {
+
+				b.setBackground(b.getBackground().darker());
+			}
+		});
+	}
+
+	public JTextField getResultField() {
+
+		return result;
+	}
+
+	public JButton[] getButtons() {
+
+		return buttons;
+	}
+
+	public JTextField getHistoryField() {
+
+		return history;
+	}
+
+	public static void main(String[] args) {
+
+		CalculatorFrame frame = new CalculatorFrame();
+
+		new CalculatorController(frame, new ArithmeticOperation());
+
+	}
+}
