@@ -9,9 +9,7 @@ import java.util.Stack;
 
 public class ArithmeticOperation {
 
-	// ===== 表示制限 =====
-	private static final int MAX_DISPLAY_LENGTH = 12; //表示は最大12桁まで
-
+	
 	// =========================
 	// ■ 外部公開メソッド
 	// =========================
@@ -46,7 +44,9 @@ public class ArithmeticOperation {
 
 				.replace("÷", "/")
 
-				.replace("√", "sqrt");
+				.replace("√", "sqrt")
+
+				.replace("π", "3.1415926535897932384626433832795028841971");
 	}
 
 	// 優先順位
@@ -66,13 +66,19 @@ public class ArithmeticOperation {
 
 		case "%":
 
+		case "mod":
+
 			return 2;
+
+		case "^":
+
+			return 3;
 
 		case "!":
 
 		case "sqrt":
 
-			return 3;
+			return 4;
 
 		}
 
@@ -85,14 +91,16 @@ public class ArithmeticOperation {
 	//演算しかどうか判定
 	private boolean isOp(String s) {
 
-		return "+-*/%".contains(s);
+		return s.equals("+") || s.equals("-") || s.equals("*") || s.equals("/") || s.equals("%")
+
+				|| s.equals("^") || s.equals("mod");
 
 	}
 
 	//関数かどうか
 	private boolean isFunc(String s) {
 
-		return s.equals("sqrt");
+		return s.equals("sqrt") || s.equals("log");
 
 	}
 
@@ -119,6 +127,12 @@ public class ArithmeticOperation {
 
 	}
 
+	private boolean isRightAssociative(String op) {
+
+		return op.equals("^");
+
+	}
+
 	//Shunting-yard
 
 	// 中置 → 後置 (Shunting-yard アルゴリズム)
@@ -140,8 +154,20 @@ public class ArithmeticOperation {
 
 			}
 
-			// 関数トークン sqrt の検出
-			if (expr.startsWith("sqrt", i)) {
+			if (expr.startsWith("sqrt", i) || expr.startsWith("log", i)) {
+
+				// 関数トークン sqrt の検出 / log の検出
+				String func;
+
+				if (expr.startsWith("sqrt", i)) {
+
+					func = "sqrt";
+
+				} else {
+
+					func = "log";
+
+				}
 
 				// 直前に数値があれば確定させる
 				if (num.length() > 0) {
@@ -152,9 +178,9 @@ public class ArithmeticOperation {
 
 				}
 
-				stack.push("sqrt"); // 関数はスタックへ
+				stack.push(func); // 関数はスタックへ
 
-				i += 3; // "sqrt" の残り3文字をスキップ
+				i += func.length() - 1; // "sqrt" の残り3文字をスキップ
 
 				continue;
 
@@ -185,17 +211,44 @@ public class ArithmeticOperation {
 				continue;
 			}
 
-			// 現在文字をトークン化
-			String token = String.valueOf(c);
+			//mod演算子の検出
 
-			// 演算子トークンの場合、スタック上の優先度以上の演算子を先に出力へ退避
-			if (isOp(token)) {
+			if (expr.startsWith("mod", i)) {
+
+				String modtoken = "mod";
 
 				while (!stack.isEmpty()
 
 						&& isOp(stack.peek())
 
-						&& prec(stack.peek()) >= prec(token)) {
+						&& (prec(stack.peek()) > prec(modtoken)
+
+								|| (prec(stack.peek()) == prec(modtoken) && !isRightAssociative(modtoken)))) {
+
+					out.add(stack.pop());
+				}
+
+				stack.push(modtoken);
+
+				i += 2;
+
+				continue;
+
+			} ////////////////////////////////////////////////////////////////////////////////昨日はここまで
+
+			// 現在の文字をトークン化
+			String token = String.valueOf(c);
+
+			// 演算子トークンの場合、スタック上の優先度以上の演算子を先に出力へ退避
+			if (isOp(token)) {
+
+				while (!stack.isEmpty() && isOp(stack.peek()) &&
+
+						 (prec(stack.peek()) > prec(token) ||
+
+						(prec(stack.peek()) == prec(token) && !isRightAssociative(token))))
+
+				{
 
 					out.add(stack.pop());
 				}
@@ -228,7 +281,7 @@ public class ArithmeticOperation {
 				stack.pop();
 
 				// 直前が関数なら出力へ
-				if (!stack.isEmpty() && stack.peek().equals("sqrt")) {
+				if (!stack.isEmpty() && isFunc(stack.peek())) {
 
 					out.add(stack.pop());
 				}
@@ -237,7 +290,9 @@ public class ArithmeticOperation {
 		}
 
 		// ループ終了後、数値バッファが残っていれば出力へ
-		if (num.length() > 0) {
+		if (num.length() > 0)
+
+		{
 
 			out.add(num.toString());
 
@@ -277,6 +332,20 @@ public class ArithmeticOperation {
 
 	}
 
+	//log10計算処理
+	private BigDecimal log10(BigDecimal x) {
+
+		if (x.compareTo(BigDecimal.ZERO) <= 0) {
+
+			throw new ArithmeticException("Invvalid log argument");
+		}
+
+		double d = Math.log10(x.doubleValue());
+
+		return new BigDecimal(d, MathContext.DECIMAL128);
+
+	}
+
 	//階乗計算処理
 	private BigDecimal factorial(int n) {
 
@@ -304,14 +373,24 @@ public class ArithmeticOperation {
 
 		for (String t : list) {
 
-			// ===== sqrt（単項）=====
-			if (t.equals("sqrt")) {
+			// ===== sqrt / log（単項）=====
+			if (t.equals("sqrt") || t.equals("log")) {
 
 				if (st.isEmpty())
 
 					throw new IllegalArgumentException("sqrt needs operand");
 
-				st.push(sqrt(st.pop()));
+				BigDecimal arg = st.pop();
+
+				if (t.equals("sqrt")) {
+
+					st.push(sqrt(arg));
+
+				} else {
+
+					st.push(log10(arg));
+
+				}
 
 				continue;
 			}
@@ -375,13 +454,27 @@ public class ArithmeticOperation {
 					break;
 
 				case "%":
+					
+				case "mod":
 
 					if (b.compareTo(BigDecimal.ZERO) == 0)
 
 						throw new ArithmeticException("Division by zero");
 
 					st.push(a.remainder(b));
-
+					
+					break;
+					
+				case "^":
+					
+					double power = Math.pow(a.doubleValue(), b.doubleValue());
+					
+					if(Double.isNaN(power) || Double.isFinite(power))
+						
+						throw new ArithmeticException("Invalid power");
+						
+						st.push(new BigDecimal(power, MathContext.DECIMAL128));
+						
 					break;
 				}
 
