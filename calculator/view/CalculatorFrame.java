@@ -99,7 +99,7 @@ public class CalculatorFrame extends JFrame {
 		add(displayPanel, BorderLayout.NORTH);
 
 		//ソフトキー
-		JPanel softKey = new JPanel(new GridLayout(6, 4, 8, 8));
+		JPanel softKey = new JPanel(new GridLayout(7, 4, 8, 8));
 
 		softKey.setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -107,15 +107,18 @@ public class CalculatorFrame extends JFrame {
 
 		add(softKey, BorderLayout.CENTER);
 
-		buttons = new JButton[24];
+		buttons = new JButton[28];
 
 		String[] labels = {
+				"π","log","mod","^",
+				"(", ")", "!", "√",
 				"AC", "C", "%", "÷",
 				"7", "8", "9", "x",
 				"4", "5", "6", "-",
 				"1", "2", "3", "+",
-				"+/-", "0", ".", "=",
-				"(", ")", "!", "√"
+				"+/-", "0", ".", "="
+				
+				
 		};
 
 		for (int i = 0; i < buttons.length; i++) {
