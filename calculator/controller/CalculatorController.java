@@ -229,7 +229,23 @@ public class CalculatorController implements ActionListener {
 			return;
 		}
 
-		if (label.equals("(")) {//カッコの処理へ
+		if (label.equals("log")) {
+
+			result.setText(applyLog(text));
+
+			justEvaluated = false;
+
+			return;
+		}
+
+		if (label.equals("π")) {
+
+			result.setText(appendPi(text));
+
+		}
+		if (label.equals("("))
+
+		{//カッコの処理へ
 
 			result.setText(appendLeftParen(text));
 
@@ -271,14 +287,14 @@ public class CalculatorController implements ActionListener {
 
 		return label.equals("+") || label.equals("-") || label.equals("x")
 
-				|| label.equals("÷");
+				|| label.equals("÷") || label.equals("^") || label.equals("mod");
 
 	}
 
 	//演算子判定
 	private boolean isTrailingOperator(char c) {
 
-		return c == '+' || c == '-' || c == 'x' || c == '÷';
+		return c == '+' || c == '-' || c == 'x' || c == '÷' || c == '^';
 
 	}
 
@@ -292,11 +308,19 @@ public class CalculatorController implements ActionListener {
 
 		char last = text.charAt(text.length() - 1);
 
-		if (!isTrailingOperator(last)) {
+		if (!isTrailingOperator(last) && !text.endsWith("mod")) {
 
 			return text;
+
 		}
 
+		if (text.endsWith("mod")) {
+
+			return trimTrailingOperators(text);
+
+		}
+
+		//末尾の演算子を削除した文字列 を返す
 		String left = text.substring(0, text.length() - 1);
 
 		if (!isNumberLike(left)) {
@@ -351,6 +375,12 @@ public class CalculatorController implements ActionListener {
 		if (text.isEmpty() || text.equals("Error")) {
 
 			return "0" + op;
+
+		}
+		
+		if (text.endsWith("mod")) {
+			
+			return text.substring(0, text.length() -3) + op;
 
 		}
 
@@ -493,6 +523,51 @@ public class CalculatorController implements ActionListener {
 		}
 
 		// 元の数値部分を置き換える
+		return text.substring(0, text.length() - num.length()) + value;
+	}
+
+	//π計算
+	private String appendPi(String text) {
+
+		if (text.equals("Error") || text.equals("0") || justEvaluated) {
+
+			return "π";
+		}
+
+		char last = text.charAt(text.length() - 1);
+
+		if (Character.isDigit(last) || last == ')' || last == 'π') {
+
+			return text + "xπ";
+
+		}
+
+		return text + "π";
+	}
+
+	//log計算
+	private String applyLog(String text) {
+
+		if (text.equals("Error")) {
+
+			return "0";
+		}
+
+		String num = getCurrentNumber(text);
+
+		if (!isNumberLike(num)) {
+
+			return text;
+
+		}
+
+		String value = operation.calculate("log(" + num + ")");
+
+		if (value.equals("Error")) {
+
+			return "Error";
+		}
+
 		return text.substring(0, text.length() - num.length()) + value;
 	}
 
@@ -698,6 +773,13 @@ public class CalculatorController implements ActionListener {
 		while (!trimmed.isEmpty()) {
 
 			char last = trimmed.charAt(trimmed.length() - 1);
+			
+			if (trimmed.endsWith("mod")) {
+				
+				trimmed = trimmed.substring(0, trimmed.length() - 3);//modを削る
+					
+					continue;
+				}
 
 			if (isTrailingOperator(last)) {
 
